@@ -728,7 +728,6 @@ HRESULT STDMETHODCALLTYPE CLiveExdiGdbSrvServer::Ioctl(
                     PWORD idtEntry = (PWORD)buffer.GetInternalBuffer();
                     DWORD64 kiDivide = ((DWORD64)idtEntry[5] << 48) + ((DWORD64)idtEntry[4] << 32) + ((DWORD64)idtEntry[3] << 16) + (DWORD64)idtEntry[0];
                     DWORD64 searchBased = kiDivide & 0xFFFFFFFFFFFF0000;
-                    IMAGE_DOS_HEADER Header = { 0 };
 
                     for (DWORD64 i = searchBased; i > 0xFFFFF80000000000; i -= 0x10000)
                     {
@@ -1396,23 +1395,25 @@ HRESULT STDMETHODCALLTYPE CLiveExdiGdbSrvServer::SetContextEx(_In_ DWORD process
         //  Floating point registers
         if (pContext->RegGroupSelection.fFloatingPointRegs)
         {
+            std::map<std::string, ULONGLONG> registersFPReg;
             for (int index = 0; index < s_numberFPRegList; ++index)
             {
                 std::string regName(s_fpRegList[index]);
-                registers[regName] = reinterpret_cast<ULONGLONG>(&pContext->RegisterArea[index * s_numberOfBytesCoprocessorRegister]);
+                registersFPReg[regName] = reinterpret_cast<ULONGLONG>(&pContext->RegisterArea[index * s_numberOfBytesCoprocessorRegister]);
             }
-            pController->SetRegisters(processorNumber, registers, true);
+            pController->SetRegisters(processorNumber, registersFPReg, false);
         }
 
         //  SSE x64 registers
         if (m_fEnableSSEContext)
         {
+            std::map<std::string, ULONGLONG> registersSSEReg;
             for (int index = 0; index < s_numberOfSseX64Registers; ++index)
             {
                 std::string regName(s_sseX64RegList[index]);
-                registers[regName] = reinterpret_cast<ULONGLONG>(&pContext->RegSSE[index]);
+                registersSSEReg[regName] = reinterpret_cast<ULONGLONG>(&pContext->RegSSE[index]);
             }
-            pController->SetRegisters(processorNumber, registers, true);
+            pController->SetRegisters(processorNumber, registersSSEReg, false);
         }
 
         return S_OK;

@@ -1137,6 +1137,14 @@ public:
                 registerValue.insert(registerValue.end(), 1, NumberToAciiHex(((pRawRegBuffer[idx] >> 4) & 0xf)));
                 registerValue.insert(registerValue.end(), 1, NumberToAciiHex((pRawRegBuffer[idx] & 0xf)));
             }
+
+            //if crx register have no order, the order is ff
+            //it maybe need 'qrcmd' command to r/w
+            if (!_stricmp(it->nameOrder.c_str(), "ff"))
+            {
+                continue;
+            }
+
             char command[512];
             _snprintf_s(command, _TRUNCATE, "P%s=%s", it->nameOrder.c_str(), registerValue.c_str());
 

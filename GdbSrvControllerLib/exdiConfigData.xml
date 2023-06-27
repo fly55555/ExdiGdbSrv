@@ -541,6 +541,12 @@
         <Entry Name ="xmm15" Order = "37" Size ="16"  />
 		<Entry Name ="mxcsr" Order = "38" Size ="4" />
 		
+		<Entry Name ="cr0" Order = "ff" Size ="8" />
+        <Entry Name ="cr2" Order = "ff" Size ="8" />
+		<Entry Name ="cr3" Order = "ff" Size ="8" />
+        <Entry Name ="cr4" Order = "ff" Size ="8" />		
+		<Entry Name ="cr8" Order = "ff" Size ="8" />
+		
       </ExdiGdbServerRegisters>
 
       <!-- x86 GDB server core resgisters -->
