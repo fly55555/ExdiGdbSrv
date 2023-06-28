@@ -346,11 +346,14 @@ unsigned AsynchronousGdbSrvController::CreateDataBreakpoint(_In_ AddressType add
         slot = static_cast<unsigned>(m_dataBreakpointSlots.size());
         m_dataBreakpointSlots.push_back(false);
     }
+
+    TargetArchitecture targetArchitecture = GdbSrvController::GetTargetArchitecture();
+    if (dataAccessType == daRead && targetArchitecture == AMD64_ARCH)
+        dataAccessType = daBoth;
+
     const char * pCommandType = GetDataAccessBreakPointCommand(dataAccessType, true);
     assert(pCommandType != nullptr);
-
     char breakCmd[128] = {0}; 
-    TargetArchitecture targetArchitecture = GdbSrvController::GetTargetArchitecture();
     PCSTR pFormat = (targetArchitecture == ARM64_ARCH || targetArchitecture == AMD64_ARCH) ?
                      "%s,%I64x,%d" : "%s,%x,%d";     
     sprintf_s(breakCmd, _countof(breakCmd), pFormat, pCommandType, address, accessWidth);
@@ -413,11 +416,14 @@ void AsynchronousGdbSrvController::DeleteDataBreakpoint(_In_ unsigned breakpoint
         throw std::exception("Trying to delete nonexisting data breakpoint");
     }
 
+    TargetArchitecture targetArchitecture = GdbSrvController::GetTargetArchitecture();
+    if (dataAccessType == daRead && targetArchitecture == AMD64_ARCH)
+        dataAccessType = daBoth;
+
     const char * pCommandType = GetDataAccessBreakPointCommand(dataAccessType, false);
     assert(pCommandType != nullptr);
 
     char breakCmd[128] = {0}; 
-    TargetArchitecture targetArchitecture = GdbSrvController::GetTargetArchitecture();
     PCSTR pFormat = (targetArchitecture == ARM64_ARCH || targetArchitecture == AMD64_ARCH) ?
                      "%s,%I64x,%d" : "%s,%x,%d";     
     sprintf_s(breakCmd, _countof(breakCmd), pFormat, pCommandType, address, accessWidth);
