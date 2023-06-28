@@ -3,9 +3,6 @@
 #include <map>
 #include "GdbSrvControllerLib.h"
 
-
-typedef std::string(*FnExecuteCommand)(_In_ const char* pCommand);
-
 static std::string string_to_hex(const std::string& input)
 {
     static const char* const lut = "0123456789ABCDEF";

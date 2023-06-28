@@ -1178,7 +1178,7 @@ HRESULT STDMETHODCALLTYPE CLiveExdiGdbSrvServer::SetContextEx(_In_ DWORD process
 }
 
 // ------------------------------------------------------------------------------
-
+#include "X86_64_SpecialRegister.h"
 HRESULT STDMETHODCALLTYPE CLiveExdiGdbSrvServer::GetContextEx(_In_ DWORD processorNumber, _Inout_ PCONTEXT_X86_64 pContext)
 {
     if (pContext == nullptr)
@@ -1205,6 +1205,9 @@ HRESULT STDMETHODCALLTYPE CLiveExdiGdbSrvServer::GetContextEx(_In_ DWORD process
         pContext->DescriptorDs.SegFlags = static_cast<DWORD>(-1);
 
         std::map<std::string, std::string> registers = pController->QueryAllRegisters(processorNumber);
+
+        QuerySpecialRegistor(pController, registers);
+
         pContext->Rax = GdbSrvController::ParseRegisterValue(registers["rax"]);
         pContext->Rbx = GdbSrvController::ParseRegisterValue(registers["rbx"]);
         pContext->Rcx = GdbSrvController::ParseRegisterValue(registers["rcx"]);

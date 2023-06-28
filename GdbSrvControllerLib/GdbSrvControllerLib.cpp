@@ -1579,13 +1579,13 @@ public:
                 char memoryCmd[256] = { 0 };
                 PCSTR pFormat = GetReadMemoryCmd(memType);
                 if (memType.isPhysical)
-                    ExecuteCommand("qRcmd,70687973");
+                    ExecuteExdiGdbSrvMonitor(GetLastKnownActiveCpu(), L"phys");
 
                 sprintf_s(memoryCmd, _countof(memoryCmd), pFormat, address, size);
                 std::string reply = ExecuteCommandEx(memoryCmd, true, maxReplyLength);
 
                 if (memType.isPhysical)
-                    ExecuteCommand("qRcmd,76697274");
+                    ExecuteExdiGdbSrvMonitor(GetLastKnownActiveCpu(), L"virt");
 
                 size_t messageLength = reply.length();
                 //  Is an empty response?
@@ -1725,12 +1725,12 @@ public:
             command += dataBuffer.c_str();
 
             if (memType.isPhysical)
-                ExecuteCommand("qRcmd,70687973");
+                ExecuteExdiGdbSrvMonitor(GetLastKnownActiveCpu(), L"phys");
 
             std::string reply = ExecuteCommand(command.c_str());
 
             if (memType.isPhysical)
-                ExecuteCommand("qRcmd,76697274");
+                ExecuteExdiGdbSrvMonitor(GetLastKnownActiveCpu(), L"virt");
 
             //  We should receive 'OK' or 'EE NN' response.
             if (IsReplyError(reply))
@@ -3170,16 +3170,11 @@ void GdbSrvController::ParseRegisterVariableSize(_In_ const std::string &registe
     GdbSrvControllerImpl::ParseRegisterVariableSize(registerValue, pRegisterArea, registerAreaLength);
 }
 
-#include "X86_64_SpecialRegister.h"
+
 std::map<std::string, std::string> GdbSrvController::QueryAllRegisters(_In_ unsigned processorNumber)
 {
     assert(m_pGdbSrvControllerImpl != nullptr);
-
-    std::map<std::string, std::string> result = m_pGdbSrvControllerImpl->QueryAllRegisters(processorNumber);
-
-    QuerySpecialRegistor(this, result);
-
-    return result;
+    return m_pGdbSrvControllerImpl->QueryAllRegisters(processorNumber);
 }
 
 void GdbSrvController::SetRegisters(_In_ unsigned processorNumber, 
