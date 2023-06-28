@@ -1578,8 +1578,14 @@ public:
                 size_t recvLength = 0;
                 char memoryCmd[256] = { 0 };
                 PCSTR pFormat = GetReadMemoryCmd(memType);
+                if (memType.isPhysical)
+                    ExecuteCommand("qRcmd,70687973");
+
                 sprintf_s(memoryCmd, _countof(memoryCmd), pFormat, address, size);
                 std::string reply = ExecuteCommandEx(memoryCmd, true, maxReplyLength);
+
+                if (memType.isPhysical)
+                    ExecuteCommand("qRcmd,76697274");
 
                 size_t messageLength = reply.length();
                 //  Is an empty response?
@@ -1718,7 +1724,13 @@ public:
             }
             command += dataBuffer.c_str();
 
+            if (memType.isPhysical)
+                ExecuteCommand("qRcmd,70687973");
+
             std::string reply = ExecuteCommand(command.c_str());
+
+            if (memType.isPhysical)
+                ExecuteCommand("qRcmd,76697274");
 
             //  We should receive 'OK' or 'EE NN' response.
             if (IsReplyError(reply))
