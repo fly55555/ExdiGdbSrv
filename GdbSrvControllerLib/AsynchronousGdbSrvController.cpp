@@ -349,7 +349,10 @@ unsigned AsynchronousGdbSrvController::CreateDataBreakpoint(_In_ AddressType add
 
     TargetArchitecture targetArchitecture = GdbSrvController::GetTargetArchitecture();
     if (dataAccessType == daRead && targetArchitecture == AMD64_ARCH)
+    {
         dataAccessType = daBoth;
+        accessWidth = accessWidth / 8;//Wrk brkpt.cpp line 4268
+    }
 
     const char * pCommandType = GetDataAccessBreakPointCommand(dataAccessType, true);
     assert(pCommandType != nullptr);
@@ -418,7 +421,10 @@ void AsynchronousGdbSrvController::DeleteDataBreakpoint(_In_ unsigned breakpoint
 
     TargetArchitecture targetArchitecture = GdbSrvController::GetTargetArchitecture();
     if (dataAccessType == daRead && targetArchitecture == AMD64_ARCH)
+    {
         dataAccessType = daBoth;
+        accessWidth = accessWidth / 8;//Wrk brkpt.cpp line 4268
+    }
 
     const char * pCommandType = GetDataAccessBreakPointCommand(dataAccessType, false);
     assert(pCommandType != nullptr);
