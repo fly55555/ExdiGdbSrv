@@ -718,12 +718,12 @@ HRESULT STDMETHODCALLTYPE CLiveExdiGdbSrvServer::Ioctl(
             //  This is not implemented by this COM server Exdi .
             case DBGENG_EXDI_IOCTL_V3_GET_NT_BASE_ADDRESS_VALUE:
             {
-                CONTEXT_X86_64 Context = { 0 };
-                if (GetContextEx(0, &Context) == S_OK && Context.IDTBase && Context.IDTLimit)
+                CONTEXT_X86_64 currentContext = { 0 };
+                if (GetContextEx(0, &currentContext) == S_OK && currentContext.IDTBase && currentContext.IDTLimit)
                 {
                     memoryAccessType memType = { 0 };
                     pController->GetMemoryPacketType(m_lastPSRvalue, &memType);
-                    SimpleCharBuffer buffer = pController->ReadMemory(Context.IDTBase, 16, memType);
+                    SimpleCharBuffer buffer = pController->ReadMemory(currentContext.IDTBase, 16, memType);
 
                     PWORD idtEntry = (PWORD)buffer.GetInternalBuffer();
                     DWORD64 kiDivide = ((DWORD64)idtEntry[5] << 48) + ((DWORD64)idtEntry[4] << 32) + ((DWORD64)idtEntry[3] << 16) + (DWORD64)idtEntry[0];
@@ -734,18 +734,49 @@ HRESULT STDMETHODCALLTYPE CLiveExdiGdbSrvServer::Ioctl(
                         SimpleCharBuffer searchBuffer = pController->ReadMemory(i, sizeof(IMAGE_DOS_HEADER), memType);
                         if (searchBuffer.GetLength() == sizeof(IMAGE_DOS_HEADER))
                         {
-                            PIMAGE_DOS_HEADER Header = (PIMAGE_DOS_HEADER)searchBuffer.GetInternalBuffer();
-                            if (Header->e_magic == IMAGE_DOS_SIGNATURE &&
-                                Header->e_cblp == 0x0090 &&
-                                Header->e_cp == 0x0003 &&
-                                Header->e_cparhdr == 0x0004 &&
-                                Header->e_maxalloc == 0xFFFF &&
-                                Header->e_sp == 0x00B8 &&
-                                Header->e_lfarlc == 0x0040 &&
-                                Header->e_lfanew)
+                            PIMAGE_DOS_HEADER pDosHeader = (PIMAGE_DOS_HEADER)searchBuffer.GetInternalBuffer();
+                            if (pDosHeader->e_magic == IMAGE_DOS_SIGNATURE &&
+                                pDosHeader->e_cblp == 0x0090 &&
+                                pDosHeader->e_cp == 0x0003 &&
+                                pDosHeader->e_cparhdr == 0x0004 &&
+                                pDosHeader->e_maxalloc == 0xFFFF &&
+                                pDosHeader->e_sp == 0x00B8 &&
+                                pDosHeader->e_lfarlc == 0x0040 &&
+                                pDosHeader->e_lfanew)
                             {
-                                hr = SafeArrayFromByteArray(reinterpret_cast<const char*>(&i), sizeof(DWORD64), pOutputBuffer);
-                                break;
+                                SimpleCharBuffer ntHeaderBuffer = pController->ReadMemory(i + pDosHeader->e_lfanew, sizeof(IMAGE_NT_HEADERS64), memType);
+                                if (ntHeaderBuffer.GetLength() == sizeof(IMAGE_NT_HEADERS64))
+                                {
+                                    PIMAGE_NT_HEADERS64 pNtHeader = (PIMAGE_NT_HEADERS64)ntHeaderBuffer.GetInternalBuffer();
+                                    IMAGE_DATA_DIRECTORY dataDebugDirectory = pNtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG];
+
+                                    SimpleCharBuffer pDebugDirectoryBuffer = pController->ReadMemory(i + dataDebugDirectory.VirtualAddress, sizeof(IMAGE_DEBUG_DIRECTORY), memType);
+                                    if (pDebugDirectoryBuffer.GetLength() == sizeof(IMAGE_DEBUG_DIRECTORY))
+                                    {
+                                        PIMAGE_DEBUG_DIRECTORY pDebugDirectory = (PIMAGE_DEBUG_DIRECTORY)pDebugDirectoryBuffer.GetInternalBuffer();
+                                        SimpleCharBuffer symPathBuffer = pController->ReadMemory(i + pDebugDirectory->AddressOfRawData, 0x40, memType);
+                                        if (symPathBuffer.GetLength() == 0x40)
+                                        {
+                                            PCHAR symPath = symPathBuffer.GetInternalBuffer();
+											for (DWORD64 n = 0; n < 0x40 - 9; n++)
+											{
+												if (symPath[n] == 'n' &&
+													symPath[n + 1] == 't' &&
+													symPath[n + 2] == 'k' &&
+													symPath[n + 3] == 'r' &&
+													symPath[n + 4] == 'n' &&
+													symPath[n + 5] == 'l' &&
+													symPath[n + 6] == 'm' &&
+													symPath[n + 7] == 'p')
+												{
+                                                    hr = SafeArrayFromByteArray(reinterpret_cast<const char*>(&i), sizeof(DWORD64), pOutputBuffer);
+                                                    return hr;
+												}
+											}
+                                        }
+                                    }
+
+                                }
                             }
                         }
                     }
