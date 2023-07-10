@@ -1,5 +1,6 @@
 # ExdiGdbSrv
 ## 项目目的
+##### 不知道这是什么项目的先看[这里](https://learn.microsoft.com/zh-cn/windows-hardware/drivers/debugger/configuring-the-exdi-debugger-transport)
 ##### 官方更新太慢, 提前修复一些方便自己调试用的问题
 ##### 代码写的太野了, 有很多并不安全的操作, 干脆不提pr了
 ## 当前已经实现的功能
