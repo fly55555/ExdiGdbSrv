@@ -14,6 +14,7 @@
 ##### 然后在windbg的内核调试链接命令里, 像我这样设置
 ##### windbg.exe -v -kx exdi:CLSID={29f9906e-9dbe-4d4b-b0fb-6acf7fb6d014},Kd=NTBaseAddr,DataBreaks=Exdi
 ##### 记住, Kd=NTBaseAddr 是必须的, 不然windbg将使用它那极其愚蠢的搜索方式找了半天也找不到Ntoskrnl基址
+##### 要注意的是, 尽量使用传统稳定版本的windbg, 愚蠢的船新版本windbg仍然有很多莫名奇妙的BUG, 这会令人抓狂
 ## 下一步预计修复的功能?
 ##### 我自己用着不舒服了再修
 
